@@ -1,6 +1,13 @@
 <html>
   <head>
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
 
 </style>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js'></script>
@@ -12,8 +19,67 @@
   <body>
     <div id='root'></div>
     <script type='text/babel'>
+    const {Component} = React 
+    const {HashRouter, Link, Route} = ReactRouterDOM
+    const API = 'https://acme-users-api-rev.herokuapp.com/api'
+
+    const fetchUser = async () => {
+      const storage = window.localStorage
+      const userId = storage.getItem('userId')
+
+      if (userId) {
+        try {
+          return (await axios.get(`${API}/users/detail/${userId}`)).data
+        }
+        catch (ex) {
+          storage.removeItem('userId')
+          return fetchUser
+        }
+      }
+
+      const user = (await axios.get(`${API}/users/random`)).data
+      storage.setItem('userId', user.id)
+      return user
+    }
+
+    const fetchBookmarks = async () => {
+      try {
+        return (await axios.get(`${API}/users/${user.id}/bookmarks`)).data
+      }
+      catch (ex) {
+        return []
+      }
+    }
+
+    class App extends Component {
+      constructor() {
+        super()
+        this.state = {
+          user: {},
+          bookmarks: []
+        }
+      }
+
+      async componentDidMount () {
+        const user = await fetchUser()
+        const bookmarks = await fetchBookmarks()
+        this.setState({user, bookmarks})
+      }
+
+      render () {
+        console.log('render', this.state)
+        const {user, bookmarks} = this.state
+        return (
+          <div id='title'>
+            <h1>Welcome {user.fullName}!</h1>
+            <h3>You have {bookmarks.length} Bookmark{bookmarks.length === 1 ? '' : 's'}</h3>
+          </div>
+        )
+      }
+    }
+
       const root = document.querySelector('#root');
-      ReactDOM.render(<hr />, root);
+      ReactDOM.render(<App />, root);
     </script>
   </body>
 </html>
