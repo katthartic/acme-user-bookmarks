@@ -68,7 +68,12 @@
         }
       }
 
-      const Nav = () => {}
+      const Nav = ({path, categories}) => {
+        console.log('Nav', path, categories)
+        return (
+          <hr />
+        )
+      }
 
       class CreateBookmark extends Component {
         constructor() {
@@ -97,7 +102,8 @@
                 onChange={ev => this.setState({ category: ev.target.value })}
               />
               <button
-                onClick={() => this.props.create({ category, url, rating })}>
+                onClick={() => this.props.create({ category, url, rating })}
+              >
                 Create
               </button>
             </form>
@@ -129,7 +135,7 @@
                 acc.push(bookmark.category)
               }
               return acc
-            }, [])
+            }, ['all'])
             .sort()
           this.setState({ user, bookmarks, categories })
         }
@@ -167,17 +173,21 @@
 
         render() {
           console.log('render', this.state)
-          const { user, bookmarks } = this.state
+          const { user, bookmarks, categories } = this.state
           const { destroy, update, create } = this
           return (
-            <div id="title">
-              <h1>Welcome {user.fullName}!</h1>
-              <h3>
-                You have {bookmarks.length} Bookmark
-                {bookmarks.length === 1 ? '' : 's'}
-              </h3>
+            <HashRouter>
+              <div id="title">
+                <h1>Welcome {user.fullName}!</h1>
+                <h3>
+                  You have {bookmarks.length} Bookmark
+                  {bookmarks.length === 1 ? '' : 's'}
+                </h3>
+              </div>
+              <Route render={ ({location}) => <Nav path={location.pathname} categories={categories} />} />
               <CreateBookmark history={history} create={create} />
-            </div>
+              <Switch></Switch>
+            </HashRouter>
           )
         }
       }
