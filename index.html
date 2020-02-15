@@ -68,11 +68,9 @@
         }
       }
 
-      const Nav = ({path, categories}) => {
+      const Nav = ({ path, categories }) => {
         console.log('Nav', path, categories)
-        return (
-          <hr />
-        )
+        return <hr />
       }
 
       class CreateBookmark extends Component {
@@ -83,6 +81,22 @@
             url: '',
             rating: 1
           }
+          this.createNew = this.createNew.bind(this)
+        }
+
+        createNew(bookmark) {
+          this.props
+            .create(bookmark)
+            .catch(ex => {
+              console.log(ex)
+              alert(ex.response.data.message)
+            })
+            .then(
+              this.setState({
+                category: '',
+                url: ''
+              })
+            )
         }
 
         render() {
@@ -102,8 +116,9 @@
                 onChange={ev => this.setState({ category: ev.target.value })}
               />
               <button
-                onClick={() => this.props.create({ category, url, rating })}
-              >
+                onClick={() => {
+                  this.createNew({ category, url, rating })
+                }}>
                 Create
               </button>
             </form>
@@ -130,12 +145,15 @@
           const user = await fetchUser()
           const bookmarks = await fetchBookmarks(user.id)
           const categories = bookmarks
-            .reduce((acc, bookmark) => {
-              if (!acc.includes(bookmark.category)) {
-                acc.push(bookmark.category)
-              }
-              return acc
-            }, ['all'])
+            .reduce(
+              (acc, bookmark) => {
+                if (!acc.includes(bookmark.category)) {
+                  acc.push(bookmark.category)
+                }
+                return acc
+              },
+              ['all']
+            )
             .sort()
           this.setState({ user, bookmarks, categories })
         }
@@ -151,24 +169,34 @@
           console.log('bookmark', bookmark)
           console.log('state', this.state)
 
-          const newBookmark = async () => {
-            try {
-              return (
-                await axios.post(`${API}/users/${user.id}/bookmarks`, {
-                  category,
-                  url,
-                  rating
-                })
-              ).data
-            } catch (ex) {
-              console.log(ex)
-              return null
-            }
-          }
+          const newBookmark = (
+            await axios.post(`${API}/users/${user.id}/bookmarks`, {
+              url,
+              category,
+              rating
+            })
+          ).data
 
-          if (newBookmark()) {
-            this.setState({ bookmarks: [...bookmarks, newBookmark()] })
-          }
+          this.setState({ bookmarks: [...bookmarks, newBookmark] })
+
+          // let newBookmark = null
+          // try {
+          // newBookmark = (
+          //   await axios.post(`${API}/users/${user.id}/bookmarks`, {
+          //     url,
+          //     category,
+          //     rating
+          //   })
+          // ).data
+          //   console.log('newbookmark', newBookmark)
+          // } catch (ex) {
+          //   console.log(ex)
+          // }
+
+          // if (newBookmark) {
+          //   const newBookmarks = [...bookmarks, newBookmark]
+          //   this.setState({ bookmarks: newBookmarks })
+          // }
         }
 
         render() {
@@ -184,7 +212,11 @@
                   {bookmarks.length === 1 ? '' : 's'}
                 </h3>
               </div>
-              <Route render={ ({location}) => <Nav path={location.pathname} categories={categories} />} />
+              <Route
+                render={({ location }) => (
+                  <Nav path={location.pathname} categories={categories} />
+                )}
+              />
               <CreateBookmark history={history} create={create} />
               <Switch></Switch>
             </HashRouter>
