@@ -150,6 +150,7 @@
 
         render() {
           const { category, url, rating } = this.state
+          const disabled = !url || !category ? 'disabled' : ''
           return (
             <form id="createBookmarkForm" onSubmit={ev => ev.preventDefault()}>
               <input
@@ -167,6 +168,7 @@
                 }
               />
               <button
+                disabled={disabled}
                 onClick={() => {
                   this.createNew({ category, url, rating })
                 }}>
@@ -205,9 +207,31 @@
           this.setState({ user, bookmarks, categories })
         }
 
-        async destory(bookmark) {}
+        async destory(bookmark) {
+          //TODO: Test
+          const { id } = bookmark
+          const { user, bookmarks } = this.state
+          await axios.delete(`${API}/users/${user.id}/bookmarks/${id}`)
 
-        async update(bookmark) {}
+          //TODO Need state update
+        }
+
+        async update(bookmark) {
+          //TODO Test
+          const { id, category, url, rating } = bookmark
+          const { user, bookmarks } = this.state
+
+          const updatedBookmark = (await axios.put(
+            `${API}/users/${user.id}/bookmarks/${id}`
+          ),
+          {
+            url,
+            category,
+            rating
+          }).data
+
+          //TODO Need state update
+        }
 
         async create(bookmark) {
           const { category, url, rating } = bookmark
@@ -233,9 +257,9 @@
           const { destroy, update, create } = this
           return (
             <HashRouter>
-              <h2 id="title">{`${user.fullName} (${bookmarks.length}) Bookmark${
+              <h2 id="title">{`${user.fullName} (${bookmarks.length} Bookmark${
                 bookmarks.length === 1 ? '' : 's'
-              }`}</h2>
+              })`}</h2>
               <Route
                 render={({ location }) => (
                   <Nav path={location.pathname} categories={categories} />
