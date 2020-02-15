@@ -6,7 +6,7 @@
       }
 
       body {
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-family: sans-serif;
       }
 
       #createBookmarkForm {
@@ -20,6 +20,12 @@
       button {
         margin: 0.25rem;
         flex: 1;
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem;
       }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
@@ -70,7 +76,17 @@
 
       const Nav = ({ path, categories }) => {
         console.log('Nav', path, categories)
-        return <hr />
+        const headers = Object.keys(categories)
+
+        return (
+          <nav>
+            {headers.map(header => (
+              <Link to={`/${header}`} key={header}>
+                {`${header.toUpperCase()} (${categories[header]})`}
+              </Link>
+            ))}
+          </nav>
+        )
       }
 
       class CreateBookmark extends Component {
@@ -113,7 +129,9 @@
                 name="category"
                 placeholder="category"
                 value={category}
-                onChange={ev => this.setState({ category: ev.target.value })}
+                onChange={ev =>
+                  this.setState({ category: ev.target.value.toLowerCase() })
+                }
               />
               <button
                 onClick={() => {
@@ -134,27 +152,34 @@
           this.state = {
             user: {},
             bookmarks: [],
-            categories: []
+            categories: {}
           }
           this.destory = this.destory.bind(this)
           this.update = this.update.bind(this)
           this.create = this.create.bind(this)
         }
 
+        conponentDidUpdate() {
+          const categories = bookmarks.reduce((acc, bookmark) => {
+            if (!acc.hasOwnProperty(bookmark.category))
+              acc[bookmark.category] = 1
+            else acc[bookmark.category] += 1
+            return acc
+          }, {})
+
+          this.setState({ categories })
+        }
+
         async componentDidMount() {
           const user = await fetchUser()
           const bookmarks = await fetchBookmarks(user.id)
-          const categories = bookmarks
-            .reduce(
-              (acc, bookmark) => {
-                if (!acc.includes(bookmark.category)) {
-                  acc.push(bookmark.category)
-                }
-                return acc
-              },
-              ['all']
-            )
-            .sort()
+          const categories = bookmarks.reduce((acc, bookmark) => {
+            if (!acc.hasOwnProperty(bookmark.category))
+              acc[bookmark.category] = 1
+            else acc[bookmark.category] += 1
+            return acc
+          }, {})
+
           this.setState({ user, bookmarks, categories })
         }
 
@@ -166,9 +191,6 @@
           const { category, url, rating } = bookmark
           const { user, bookmarks } = this.state
 
-          console.log('bookmark', bookmark)
-          console.log('state', this.state)
-
           const newBookmark = (
             await axios.post(`${API}/users/${user.id}/bookmarks`, {
               url,
@@ -178,25 +200,6 @@
           ).data
 
           this.setState({ bookmarks: [...bookmarks, newBookmark] })
-
-          // let newBookmark = null
-          // try {
-          // newBookmark = (
-          //   await axios.post(`${API}/users/${user.id}/bookmarks`, {
-          //     url,
-          //     category,
-          //     rating
-          //   })
-          // ).data
-          //   console.log('newbookmark', newBookmark)
-          // } catch (ex) {
-          //   console.log(ex)
-          // }
-
-          // if (newBookmark) {
-          //   const newBookmarks = [...bookmarks, newBookmark]
-          //   this.setState({ bookmarks: newBookmarks })
-          // }
         }
 
         render() {
