@@ -12,6 +12,7 @@
       #createBookmarkForm {
         display: flex;
         flex-direction: column;
+        margin: 0.75rem;
         padding: 1rem;
         border: black solid 1px;
       }
@@ -25,7 +26,27 @@
       nav {
         display: flex;
         justify-content: space-between;
-        padding: 1rem;
+        padding: 0.75rem;
+      }
+
+      .link {
+        color: black;
+        font-size: small;
+      }
+
+      div,
+      h2 {
+        padding: 0.75rem;
+      }
+
+      .selected {
+        padding: 0.75rem;
+
+        background-color: teal;
+      }
+
+      .selected > .link {
+        color: white;
       }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
@@ -74,16 +95,28 @@
         }
       }
 
+      const createCategories = bookmarks => {
+        return bookmarks.reduce((acc, bookmark) => {
+          if (!acc.hasOwnProperty(bookmark.category)) acc[bookmark.category] = 1
+          else acc[bookmark.category] += 1
+          return acc
+        }, {})
+      }
+
       const Nav = ({ path, categories }) => {
         console.log('Nav', path, categories)
-        const headers = Object.keys(categories)
+        const headers = Object.keys(categories).sort()
 
         return (
           <nav>
             {headers.map(header => (
-              <Link to={`/${header}`} key={header}>
-                {`${header.toUpperCase()} (${categories[header]})`}
-              </Link>
+              <div
+                key={header}
+                className={path === `/${header}` ? 'selected' : 'navTab'}>
+                <Link to={`/${header}`} className="link">
+                  {`${header.toUpperCase()} (${categories[header]})`}
+                </Link>
+              </div>
             ))}
           </nav>
         )
@@ -160,25 +193,14 @@
         }
 
         conponentDidUpdate() {
-          const categories = bookmarks.reduce((acc, bookmark) => {
-            if (!acc.hasOwnProperty(bookmark.category))
-              acc[bookmark.category] = 1
-            else acc[bookmark.category] += 1
-            return acc
-          }, {})
-
+          const categories = createCategories(this.bookmarks)
           this.setState({ categories })
         }
 
         async componentDidMount() {
           const user = await fetchUser()
           const bookmarks = await fetchBookmarks(user.id)
-          const categories = bookmarks.reduce((acc, bookmark) => {
-            if (!acc.hasOwnProperty(bookmark.category))
-              acc[bookmark.category] = 1
-            else acc[bookmark.category] += 1
-            return acc
-          }, {})
+          const categories = createCategories(bookmarks)
 
           this.setState({ user, bookmarks, categories })
         }
@@ -199,7 +221,10 @@
             })
           ).data
 
-          this.setState({ bookmarks: [...bookmarks, newBookmark] })
+          this.setState({
+            bookmarks: [...bookmarks, newBookmark],
+            categories: createCategories([...bookmarks, newBookmark])
+          })
         }
 
         render() {
@@ -208,13 +233,9 @@
           const { destroy, update, create } = this
           return (
             <HashRouter>
-              <div id="title">
-                <h1>Welcome {user.fullName}!</h1>
-                <h3>
-                  You have {bookmarks.length} Bookmark
-                  {bookmarks.length === 1 ? '' : 's'}
-                </h3>
-              </div>
+              <h2 id="title">{`${user.fullName} (${bookmarks.length}) Bookmark${
+                bookmarks.length === 1 ? '' : 's'
+              }`}</h2>
               <Route
                 render={({ location }) => (
                   <Nav path={location.pathname} categories={categories} />
