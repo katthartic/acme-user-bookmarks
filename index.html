@@ -147,11 +147,11 @@
           const bookmark = { category, url, rating }
           this.props
             .create(bookmark)
-            // .then(() => this.props.history.push(`/${category}`)) //TODO: Test
-            .catch(ex => {
-              console.log(ex)
-              alert(ex.response.data.message)
-            })
+            .then(() => this.props.history.push(`/${category}`)) //TODO: Test
+            // .catch(ex => {
+            //   console.log(ex)
+            //   alert(ex.response.data.message)
+            // })
             .then(
               this.setState({
                 category: '',
