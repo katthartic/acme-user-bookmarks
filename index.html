@@ -218,14 +218,8 @@
             categories: {}
           }
           this.destroy = this.destroy.bind(this)
-          this.update = this.update.bind(this)
           this.create = this.create.bind(this)
         }
-
-        // conponentDidUpdate() {
-        //   const categories = createCategories(this.bookmarks)
-        //   this.setState({ categories })
-        // }
 
         async componentDidMount() {
           const user = await fetchUser()
@@ -240,7 +234,6 @@
           const { user, bookmarks } = this.state
           await axios.delete(`${API}/users/${user.id}/bookmarks/${id}`)
 
-          //TODO Need state update
           const updatedBookmarks = bookmarks.filter(
             bookmark => bookmark.id !== id
           )
@@ -249,23 +242,6 @@
             bookmarks: updatedBookmarks,
             categories: createCategories(updatedBookmarks)
           })
-        }
-
-        async update(bookmark) {
-          //TODO Test
-          const { id, category, url, rating } = bookmark
-          const { user, bookmarks } = this.state
-
-          const updatedBookmark = (await axios.put(
-            `${API}/users/${user.id}/bookmarks/${id}`
-          ),
-          {
-            url,
-            category,
-            rating
-          }).data
-
-          //TODO Need state update
         }
 
         async create(bookmark) {
@@ -289,7 +265,7 @@
         render() {
           console.log('render', this.state)
           const { user, bookmarks, categories } = this.state
-          const { destroy, update, create } = this
+          const { destroy, create } = this
           return (
             <HashRouter>
               <h2 id="title">{`${user.fullName} (${bookmarks.length} Bookmark${
