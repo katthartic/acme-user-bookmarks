@@ -39,6 +39,10 @@
         padding: 0.75rem;
       }
 
+      a {
+        flex: 2;
+      }
+
       .selected {
         padding: 0.75rem;
 
@@ -47,6 +51,11 @@
 
       .selected > .link {
         color: white;
+      }
+
+      .bookmarks {
+        display: flex;
+        justify-content: space-around;
       }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
@@ -133,9 +142,12 @@
           this.createNew = this.createNew.bind(this)
         }
 
-        createNew(bookmark) {
+        createNew(category, url, rating) {
+          console.log('history', this.props.history)
+          const bookmark = { category, url, rating }
           this.props
             .create(bookmark)
+            // .then(() => this.props.history.push(`/${category}`)) //TODO: Test
             .catch(ex => {
               console.log(ex)
               alert(ex.response.data.message)
@@ -170,7 +182,7 @@
               <button
                 disabled={disabled}
                 onClick={() => {
-                  this.createNew({ category, url, rating })
+                  this.createNew(category, url, rating)
                 }}>
                 Create
               </button>
@@ -179,7 +191,23 @@
         }
       }
 
-      const Bookmarks = () => {}
+      const Bookmarks = ({ pathCategory, bookmarks, destroy }) => {
+        return bookmarks
+          .filter(bookmark => bookmark.category === pathCategory)
+          .map(bookmark => {
+            return (
+              <div className="bookmarks" key={bookmark.id}>
+                <a href={`${bookmark.url}`}>{bookmark.url}</a>
+                <button
+                  onClick={() => {
+                    destroy(bookmark)
+                  }}>
+                  Destory
+                </button>
+              </div>
+            )
+          })
+      }
 
       class App extends Component {
         constructor() {
@@ -189,15 +217,15 @@
             bookmarks: [],
             categories: {}
           }
-          this.destory = this.destory.bind(this)
+          this.destroy = this.destroy.bind(this)
           this.update = this.update.bind(this)
           this.create = this.create.bind(this)
         }
 
-        conponentDidUpdate() {
-          const categories = createCategories(this.bookmarks)
-          this.setState({ categories })
-        }
+        // conponentDidUpdate() {
+        //   const categories = createCategories(this.bookmarks)
+        //   this.setState({ categories })
+        // }
 
         async componentDidMount() {
           const user = await fetchUser()
@@ -207,13 +235,20 @@
           this.setState({ user, bookmarks, categories })
         }
 
-        async destory(bookmark) {
-          //TODO: Test
+        async destroy(bookmark) {
           const { id } = bookmark
           const { user, bookmarks } = this.state
           await axios.delete(`${API}/users/${user.id}/bookmarks/${id}`)
 
           //TODO Need state update
+          const updatedBookmarks = bookmarks.filter(
+            bookmark => bookmark.id !== id
+          )
+
+          this.setState({
+            bookmarks: updatedBookmarks,
+            categories: createCategories(updatedBookmarks)
+          })
         }
 
         async update(bookmark) {
@@ -266,7 +301,23 @@
                 )}
               />
               <CreateBookmark history={history} create={create} />
-              <Switch></Switch>
+              <Switch>
+                {Object.keys(categories).map(category => {
+                  return (
+                    <Route
+                      key={category}
+                      path={`/${category}`}
+                      render={() => (
+                        <Bookmarks
+                          pathCategory={category}
+                          bookmarks={bookmarks}
+                          destroy={destroy}
+                        />
+                      )}
+                    />
+                  )
+                })}
+              </Switch>
             </HashRouter>
           )
         }
