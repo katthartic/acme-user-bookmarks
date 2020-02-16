@@ -272,11 +272,14 @@
                 bookmarks.length === 1 ? '' : 's'
               })`}</h2>
               <Route
-                render={({ location }) => (
-                  <Nav path={location.pathname} categories={categories} />
+                render={({ history, location }) => (
+                  <main>
+                    <Nav path={location.pathname} categories={categories} />
+                    <CreateBookmark history={history} create={create} />
+                  </main>
                 )}
               />
-              <CreateBookmark history={history} create={create} />
+
               <Switch>
                 {Object.keys(categories).map(category => {
                   return (
