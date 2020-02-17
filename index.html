@@ -9,7 +9,18 @@
         font-family: sans-serif;
       }
 
-      #createBookmarkForm {
+      nav {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem;
+      }
+
+      nav a {
+        color: black;
+        font-size: small;
+      }
+
+      form {
         display: flex;
         flex-direction: column;
         margin: 0.75rem;
@@ -23,12 +34,6 @@
         flex: 1;
       }
 
-      nav {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.75rem;
-      }
-
       li,
       div,
       h2 {
@@ -39,18 +44,13 @@
         flex: 2;
       }
 
-      .link {
-        color: black;
-        font-size: small;
-      }
-
       .selected {
         padding: 0.75rem;
 
         background-color: teal;
       }
 
-      .selected > .link {
+      .selected > a {
         color: white;
       }
 
@@ -115,7 +115,6 @@
       }
 
       const Nav = ({ filter, categories }) => {
-        console.log('Nav-filter:', filter, categories)
         const navTabs = Object.keys(categories).sort()
 
         return (
@@ -123,8 +122,8 @@
             {navTabs.map(navTab => (
               <div
                 key={navTab}
-                className={filter === `${navTab}` ? 'selected' : 'navTab'}>
-                <Link to={`/${navTab}`} className="link">
+                className={filter === `${navTab}` ? 'selected' : ''}>
+                <Link to={`/${navTab}`}>
                   {`${navTab.toUpperCase()} (${categories[navTab]})`}
                 </Link>
               </div>
@@ -148,7 +147,7 @@
           const bookmark = { category, url, rating }
           this.props
             .create(bookmark)
-            .then(() => this.props.history.push(`/${category}`)) //TODO: Test
+            .then(() => this.props.history.push(`/${category}`))
             .catch(ex => {
               console.log(ex)
               alert(ex.response.data.message)
@@ -193,12 +192,13 @@
       }
 
       const Bookmarks = ({ filter, bookmarks, destroy }) => {
-        console.log('bookmarks-filter:', filter)
         const renderBookmarks = bookmarks => {
           return bookmarks.map(bookmark => {
             return (
               <li className="bookmarks" key={bookmark.id}>
-                <a href={`${bookmark.url}`}>{bookmark.url}</a>
+                <a href={`${bookmark.url}`} target="_blank">
+                  {bookmark.url}
+                </a>
                 <button
                   onClick={() => {
                     destroy(bookmark)
@@ -274,7 +274,6 @@
         }
 
         render() {
-          console.log('render-state:', this.state)
           const { user, bookmarks, categories } = this.state
           const { destroy, create } = this
           return (
