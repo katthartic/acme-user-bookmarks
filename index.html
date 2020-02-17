@@ -48,16 +48,18 @@
       }
 
       const createCategories = bookmarks => {
-        return bookmarks.reduce((acc, bookmark) => {
+        //creates categories object
+        const categories = bookmarks.reduce((acc, bookmark) => {
           if (!acc.hasOwnProperty(bookmark.category)) acc[bookmark.category] = 1
           else acc[bookmark.category] += 1
-          acc.all = bookmarks.length
           return acc
         }, {})
+        categories.all = bookmarks.length //adds an 'all' category
+        return categories
       }
 
       const Nav = ({ filter, categories }) => {
-        const navTabs = Object.keys(categories).sort()
+        const navTabs = Object.keys(categories).sort() //alpha-order nav tabs
 
         return (
           <nav>
@@ -79,20 +81,19 @@
           super()
           this.state = {
             category: '',
-            url: '',
-            rating: 1
+            url: ''
           }
           this.createNew = this.createNew.bind(this)
         }
 
-        createNew(category, url, rating) {
-          const bookmark = { category, url, rating }
+        createNew(category, url) {
+          const bookmark = { category, url }
           this.props
             .create(bookmark)
             .then(() => this.props.history.push(`/${category}`))
             .catch(ex => {
               console.log(ex)
-              alert(ex.response.data.message)
+              alert(ex.response.data.message) //alert if unable to create new bookmark
             })
             .then(
               this.setState({
@@ -103,7 +104,7 @@
         }
 
         render() {
-          const { category, url, rating } = this.state
+          const { category, url } = this.state
           const disabled = !url || !category ? 'disabled' : ''
           return (
             <form id="createBookmarkForm" onSubmit={ev => ev.preventDefault()}>
@@ -124,7 +125,7 @@
               <button
                 disabled={disabled}
                 onClick={() => {
-                  this.createNew(category, url, rating)
+                  this.createNew(category, url)
                 }}>
                 Create
               </button>
@@ -198,14 +199,13 @@
         }
 
         async create(bookmark) {
-          const { category, url, rating } = bookmark
+          const { category, url } = bookmark
           const { user, bookmarks } = this.state
 
           const newBookmark = (
             await axios.post(`${API}/users/${user.id}/bookmarks`, {
               url,
-              category,
-              rating
+              category
             })
           ).data
 
