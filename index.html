@@ -105,25 +105,24 @@
 
         render() {
           const { category, url } = this.state
-          const disabled = !url || !category ? 'disabled' : ''
           return (
             <form id="createBookmarkForm" onSubmit={ev => ev.preventDefault()}>
               <input
                 name="url"
-                placeholder="url"
+                placeholder="enter url (eg. http://www.google.com)"
                 value={url}
                 onChange={ev => this.setState({ url: ev.target.value })}
               />
               <input
                 name="category"
-                placeholder="category"
+                placeholder="enter category (eg. search)"
                 value={category}
                 onChange={ev =>
                   this.setState({ category: ev.target.value.toLowerCase() })
                 }
               />
               <button
-                disabled={disabled}
+                disabled={!url || !category ? 'disabled' : ''}
                 onClick={() => {
                   this.createNew(category, url)
                 }}>
