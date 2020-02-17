@@ -29,11 +29,7 @@
         padding: 0.75rem;
       }
 
-      .link {
-        color: black;
-        font-size: small;
-      }
-
+      li,
       div,
       h2 {
         padding: 0.75rem;
@@ -41,6 +37,11 @@
 
       a {
         flex: 2;
+      }
+
+      .link {
+        color: black;
+        font-size: small;
       }
 
       .selected {
@@ -108,22 +109,23 @@
         return bookmarks.reduce((acc, bookmark) => {
           if (!acc.hasOwnProperty(bookmark.category)) acc[bookmark.category] = 1
           else acc[bookmark.category] += 1
+          acc.all = bookmarks.length
           return acc
         }, {})
       }
 
-      const Nav = ({ path, categories }) => {
-        console.log('Nav', path, categories)
-        const headers = Object.keys(categories).sort()
+      const Nav = ({ filter, categories }) => {
+        console.log('Nav-filter:', filter, categories)
+        const navTabs = Object.keys(categories).sort()
 
         return (
           <nav>
-            {headers.map(header => (
+            {navTabs.map(navTab => (
               <div
-                key={header}
-                className={path === `/${header}` ? 'selected' : 'navTab'}>
-                <Link to={`/${header}`} className="link">
-                  {`${header.toUpperCase()} (${categories[header]})`}
+                key={navTab}
+                className={filter === `${navTab}` ? 'selected' : 'navTab'}>
+                <Link to={`/${navTab}`} className="link">
+                  {`${navTab.toUpperCase()} (${categories[navTab]})`}
                 </Link>
               </div>
             ))}
@@ -143,15 +145,14 @@
         }
 
         createNew(category, url, rating) {
-          console.log('history', this.props.history)
           const bookmark = { category, url, rating }
           this.props
             .create(bookmark)
             .then(() => this.props.history.push(`/${category}`)) //TODO: Test
-            // .catch(ex => {
-            //   console.log(ex)
-            //   alert(ex.response.data.message)
-            // })
+            .catch(ex => {
+              console.log(ex)
+              alert(ex.response.data.message)
+            })
             .then(
               this.setState({
                 category: '',
@@ -191,12 +192,12 @@
         }
       }
 
-      const Bookmarks = ({ pathCategory, bookmarks, destroy }) => {
-        return bookmarks
-          .filter(bookmark => bookmark.category === pathCategory)
-          .map(bookmark => {
+      const Bookmarks = ({ filter, bookmarks, destroy }) => {
+        console.log('bookmarks-filter:', filter)
+        const renderBookmarks = bookmarks => {
+          return bookmarks.map(bookmark => {
             return (
-              <div className="bookmarks" key={bookmark.id}>
+              <li className="bookmarks" key={bookmark.id}>
                 <a href={`${bookmark.url}`}>{bookmark.url}</a>
                 <button
                   onClick={() => {
@@ -204,9 +205,19 @@
                   }}>
                   Destory
                 </button>
-              </div>
+              </li>
             )
           })
+        }
+
+        if (filter === 'all') {
+          return <ul>{renderBookmarks(bookmarks)}</ul>
+        } else {
+          const filtered = bookmarks.filter(
+            bookmark => bookmark.category === filter
+          )
+          return <ul>{renderBookmarks(filtered)}</ul>
+        }
       }
 
       class App extends Component {
@@ -263,7 +274,7 @@
         }
 
         render() {
-          console.log('render', this.state)
+          console.log('render-state:', this.state)
           const { user, bookmarks, categories } = this.state
           const { destroy, create } = this
           return (
@@ -272,31 +283,19 @@
                 bookmarks.length === 1 ? '' : 's'
               })`}</h2>
               <Route
-                render={({ history, location }) => (
+                path="/:filter?"
+                render={({ history, match }) => (
                   <main>
-                    <Nav path={location.pathname} categories={categories} />
+                    <Nav filter={match.params.filter} categories={categories} />
                     <CreateBookmark history={history} create={create} />
+                    <Bookmarks
+                      filter={match.params.filter}
+                      bookmarks={bookmarks}
+                      destroy={destroy}
+                    />
                   </main>
                 )}
               />
-
-              <Switch>
-                {Object.keys(categories).map(category => {
-                  return (
-                    <Route
-                      key={category}
-                      path={`/${category}`}
-                      render={() => (
-                        <Bookmarks
-                          pathCategory={category}
-                          bookmarks={bookmarks}
-                          destroy={destroy}
-                        />
-                      )}
-                    />
-                  )
-                })}
-              </Switch>
             </HashRouter>
           )
         }
