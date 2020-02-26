@@ -66,7 +66,8 @@
             {navTabs.map(navTab => (
               <div
                 key={navTab}
-                className={filter === `${navTab}` ? 'selected' : ''}>
+                className={filter === `${navTab}` ? 'selected' : ''}
+              >
                 <Link to={`/${navTab}`}>
                   {`${navTab.toUpperCase()} (${categories[navTab]})`}
                 </Link>
@@ -125,7 +126,8 @@
                 disabled={!url || !category ? 'disabled' : ''}
                 onClick={() => {
                   this.createNew(category, url)
-                }}>
+                }}
+              >
                 Create
               </button>
             </form>
@@ -133,7 +135,7 @@
         }
       }
 
-      const Bookmarks = ({ filter, bookmarks, destroy }) => {
+      const Bookmarks = ({ history, filter, bookmarks, destroy }) => {
         const renderBookmarks = bookmarks => {
           return bookmarks.map(bookmark => {
             return (
@@ -143,8 +145,9 @@
                 </a>
                 <button
                   onClick={() => {
-                    destroy(bookmark)
-                  }}>
+                    destroy(bookmark, history)
+                  }}
+                >
                   Destory
                 </button>
               </li>
@@ -182,9 +185,10 @@
           this.setState({ user, bookmarks, categories })
         }
 
-        async destroy(bookmark) {
+        async destroy(bookmark, history) {
           const { id } = bookmark
           const { user, bookmarks } = this.state
+          const category = bookmark.category
           await axios.delete(`${API}/users/${user.id}/bookmarks/${id}`)
 
           const updatedBookmarks = bookmarks.filter(
@@ -195,6 +199,9 @@
             bookmarks: updatedBookmarks,
             categories: createCategories(updatedBookmarks)
           })
+
+          if (!this.state.categories.hasOwnProperty(category))
+            history.push('/all')
         }
 
         async create(bookmark) {
@@ -229,6 +236,7 @@
                     <Nav filter={match.params.filter} categories={categories} />
                     <CreateBookmark history={history} create={create} />
                     <Bookmarks
+                      history={history}
                       filter={match.params.filter}
                       bookmarks={bookmarks}
                       destroy={destroy}
